@@ -1,24 +1,24 @@
--- Advanced Mobile Menu v4 (Split Modes, Fixed Menu Drag, Circular Void Button with Toggle Lock & 4s Loop Timing)
+-- Advanced Mobile Menu v6 (TSB Ultimate Edition: Ultra-fast 0.1s Behind Loop, Split Mode 3 & 4 with Instant Target Switch on Death)
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local CoreGui = game:GetService("CoreGui")
 local UserInputService = game:GetService("UserInputService")
 local player = Players.LocalPlayer
 
-if CoreGui:FindFirstChild("AdvancedMobileMenuV4") then
-    CoreGui.AdvancedMobileMenuV4:Destroy()
+if CoreGui:FindFirstChild("AdvancedMobileMenuV6") then
+    CoreGui.AdvancedMobileMenuV6:Destroy()
 end
 
 -- Cấu hình trạng thái
-local isEnabled = false -- Mặc định OFF
-local currentMode = 3 -- 1: Danh sách, 2: Textbox, 3: Random, 4: Ít máu nhất
+local isEnabled = false
+local currentMode = 3 -- 1: Danh sách, 2: Textbox, 3: Random riêng, 4: Ít máu nhất riêng
 local targetPlayer = nil
 local isFollowing = false
 local distanceOffset = 4
 
 -- Tạo ScreenGui
 local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "AdvancedMobileMenuV4"
+screenGui.Name = "AdvancedMobileMenuV6"
 screenGui.Parent = CoreGui
 screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
@@ -59,7 +59,7 @@ end
 
 makeDraggable(toggleBtn)
 
--- 2. KHUNG MENU CHÍNH (Đã fix để kéo thả di chuyển mượt mà toàn khung)
+-- 2. KHUNG MENU CHÍNH (Kéo thả toàn bộ khung)
 local mainFrame = Instance.new("Frame")
 mainFrame.Parent = screenGui
 mainFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
@@ -68,7 +68,7 @@ mainFrame.Position = UDim2.new(0.02, 0, 0.23, 0)
 mainFrame.Size = UDim2.new(0, 230, 0, 360)
 mainFrame.Visible = false
 local c2 = Instance.new("UICorner") c2.CornerRadius = UDim.new(0, 8) c2.Parent = mainFrame
-makeDraggable(mainFrame) -- Cho phép kéo thả toàn bộ bảng Menu chính
+makeDraggable(mainFrame)
 
 local title = Instance.new("TextLabel")
 title.Parent = mainFrame
@@ -77,7 +77,7 @@ title.Size = UDim2.new(1, 0, 0, 30)
 title.Font = Enum.Font.SourceSansBold
 title.TextColor3 = Color3.fromRGB(255, 255, 255)
 title.TextSize = 13
-title.Text = "☰ MENU ĐIỀU KHIỂN (Kéo bất kỳ)"
+title.Text = "☰ TSB MENU (Kéo bất kỳ)"
 local c3 = Instance.new("UICorner") c3.CornerRadius = UDim.new(0, 8) c3.Parent = title
 
 -- Nút ON / OFF Tổng
@@ -92,7 +92,7 @@ powerBtn.TextSize = 13
 powerBtn.Text = "Trạng thái: OFF"
 local cPow = Instance.new("UICorner") cPow.CornerRadius = UDim.new(0, 4) cPow.Parent = powerBtn
 
--- Nút Chuyển Chế Độ (1: Danh sách, 2: Textbox, 3: Random, 4: Ít máu nhất)
+-- Nút Chuyển Chế Độ (1: Danh sách, 2: Textbox, 3: Random riêng, 4: Ít máu nhất riêng)
 local modeBtn = Instance.new("TextButton")
 modeBtn.Parent = mainFrame
 modeBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
@@ -173,7 +173,7 @@ scrollingFrame.ScrollBarThickness = 3
 local uiLayout = Instance.new("UIListLayout") uiLayout.Parent = scrollingFrame uiLayout.Padding = UDim.new(0, 4)
 scrollingFrame.Visible = false
 
--- 3. NÚT ĐẶC BIỆT DẠNG HÌNH TRÒN (Dịch chuyển tất cả người chơi trong 0.1s rồi ra Void chờ 2s thành tổng 4s)
+-- 3. NÚT ĐẶC BIỆT TRÒN (Void Loop + Icon Khóa 🔓/🔒)
 local specialContainer = Instance.new("Frame")
 specialContainer.Parent = screenGui
 specialContainer.BackgroundTransparency = 1
@@ -198,7 +198,7 @@ lockBtn.Size = UDim2.new(0, 40, 0, 18)
 lockBtn.Font = Enum.Font.SourceSansBold
 lockBtn.TextColor3 = Color3.fromRGB(100, 255, 100)
 lockBtn.TextSize = 12
-lockBtn.Text = "🔓" -- Mở khóa mặc định
+lockBtn.Text = "🔓"
 local cLock = Instance.new("UICorner") cLock.CornerRadius = UDim.new(0, 4) cLock.Parent = lockBtn
 
 -- Logic Khóa/Mở icon khóa
@@ -206,15 +206,15 @@ local isLocked = false
 lockBtn.MouseButton1Click:Connect(function()
     isLocked = not isLocked
     if isLocked then
-        lockBtn.Text = "🔒" -- Đóng khóa
+        lockBtn.Text = "🔒"
         lockBtn.TextColor3 = Color3.fromRGB(255, 100, 100)
     else
-        lockBtn.Text = "🔓" -- Mở khóa
+        lockBtn.Text = "🔓"
         lockBtn.TextColor3 = Color3.fromRGB(100, 255, 100)
     end
 end)
 
--- Kéo thả nút đặc biệt (nếu không bị khóa)
+-- Kéo thả nút đặc biệt
 local sDragging, sDragStart, sStartPos
 specialContainer.InputBegan:Connect(function(input)
     if not isLocked and (input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1) then
@@ -258,7 +258,7 @@ plusDist.MouseButton1Click:Connect(function()
     distLabel.Text = "Khoảng cách sau lưng: " .. distanceOffset
 end)
 
--- Chuyển chế độ (1, 2, 3: Random riêng, 4: Ít máu nhất riêng)
+-- Chuyển chế độ
 modeBtn.MouseButton1Click:Connect(function()
     currentMode = currentMode + 1
     if currentMode > 4 then currentMode = 1 end
@@ -300,7 +300,7 @@ local function findTargetByText(query)
     return nil
 end
 
--- Chế độ 3: Random người chơi (Có lọc ngoại lệ Blacklist)
+-- Chế độ 3: Random người chơi sống
 local function getRandomPlayer()
     local validList = {}
     for _, p in ipairs(Players:GetPlayers()) do
@@ -317,7 +317,7 @@ local function getRandomPlayer()
     return nil
 end
 
--- Chế độ 4: Người ít máu nhất (Có lọc ngoại lệ Blacklist)
+-- Chế độ 4: Người ít máu nhất còn sống
 local function getLowestHealthPlayer()
     local lowestP = nil
     local minHealth = math.huge
@@ -333,20 +333,30 @@ local function getLowestHealthPlayer()
     return lowestP
 end
 
--- Vòng lặp bám dính liên tục theo RenderStepped
+-- Vòng lặp bám dính liên tục (Tự động đổi mục tiêu ngay lập tức sang người khác khi người cũ chết)
 RunService.RenderStepped:Connect(function()
     if not isEnabled or not isFollowing then return end
+    
+    local isTargetDead = false
+    if targetPlayer and targetPlayer.Character then
+        local hum = targetPlayer.Character:FindFirstChildOfClass("Humanoid")
+        if not hum or hum.Health <= 0 or not targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            isTargetDead = true
+        end
+    else
+        isTargetDead = true
+    end
     
     if currentMode == 2 then
         local query = nameBox.Text
         if query ~= "" then targetPlayer = findTargetByText(query) end
     elseif currentMode == 3 then
-        if not targetPlayer or not targetPlayer.Character or not targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
-            targetPlayer = getRandomPlayer()
+        if not targetPlayer or isTargetDead then
+            targetPlayer = getRandomPlayer() -- Chết -> Đổi random người mới ngay lập tức
         end
     elseif currentMode == 4 then
-        if not targetPlayer or not targetPlayer.Character or not targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
-            targetPlayer = getLowestHealthPlayer()
+        if not targetPlayer or isTargetDead then
+            targetPlayer = getLowestHealthPlayer() -- Chết -> Đổi sang người ít máu tiếp theo ngay lập tức
         end
     end
     
@@ -367,7 +377,7 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- Chức năng nút đặc biệt: Dịch chuyển tất cả mọi người trong tổng 0.1s, sau đó ra Void đợi 2s (Tổng chu kỳ 4s)
+-- Nút đặc biệt: Lướt ra sau lưng tất cả người chơi siêu nhanh tức thì (0.1s/người) rồi ra Void đứng chờ chết (Tổng 4s)
 local isVoidLooping = false
 voidLoopBtn.MouseButton1Click:Connect(function()
     if isVoidLooping then return end
@@ -376,33 +386,27 @@ voidLoopBtn.MouseButton1Click:Connect(function()
     
     task.spawn(function()
         local list = Players:GetPlayers()
-        local count = 0
-        for _, p in ipairs(list) do
-            if p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
-                count = count + 1
-            end
-        end
         
-        -- Chia thời gian 2 giây đầu để lướt qua tất cả mọi người
-        local interval = (count > 0) and (2 / count) or 0.1
-        
+        -- Lướt cực nhanh ra sau lưng từng người (0.1 giây mỗi người)
         for _, p in ipairs(list) do
             if p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
                 local char = player.Character
                 if char and char:FindFirstChild("HumanoidRootPart") then
-                    char.HumanoidRootPart.CFrame = p.Character.HumanoidRootPart.CFrame + Vector3.new(0, 3, 0)
-                    task.wait(interval)
+                    local targetHRP = p.Character.HumanoidRootPart
+                    local offset = targetHRP.CFrame * CFrame.new(0, 0, distanceOffset)
+                    char.HumanoidRootPart.CFrame = CFrame.new(offset.Position, targetHRP.Position)
+                    task.wait(0.1) -- Tốc độ lướt qua mỗi người
                 end
             end
         end
         
-        -- Dịch chuyển xuống Void để chết và chờ thêm 2 giây ở ngoài đó (Tổng thời gian chu kỳ = 4 giây)
+        -- Dịch chuyển ra vùng Void của map TSB để chết và đứng chờ ở ngoài đó
         local char = player.Character
         if char and char:FindFirstChild("HumanoidRootPart") then
             char.HumanoidRootPart.CFrame = CFrame.new(0, -50000, 0)
         end
         
-        task.wait(2) -- Đợi ở Void để hoàn thành tổng 4 giây
+        task.wait(2) -- Chờ ở Void để hoàn thành đủ chu kỳ 4 giây tổng cộng
         voidLoopBtn.Text = "Void Loop"
         isVoidLooping = false
     end)
@@ -443,4 +447,4 @@ toggleBtn.MouseButton1Click:Connect(function()
     if mainFrame.Visible and currentMode == 1 then updateList() end
 end)
 
-print("Advanced Mobile Menu v4 Loaded Successfully!")
+print("Advanced Mobile Menu v6 (TSB) Loaded Successfully!")
