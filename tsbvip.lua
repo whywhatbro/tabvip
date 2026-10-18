@@ -1,4 +1,4 @@
--- Advanced Mobile Menu v8 (TSB Ultimate: Behind/Under Feet Mode, No-Collision & Mobile Auto M1)
+-- Advanced Mobile Menu v9 (TSB Ultimate: Anti-Void, Under Feet Look Up & Adjustable Offset for Feet)
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local CoreGui = game:GetService("CoreGui")
@@ -6,8 +6,8 @@ local UserInputService = game:GetService("UserInputService")
 local VirtualUser = game:GetService("VirtualUser")
 local player = Players.LocalPlayer
 
-if CoreGui:FindFirstChild("AdvancedMobileMenuV8") then
-    CoreGui.AdvancedMobileMenuV8:Destroy()
+if CoreGui:FindFirstChild("AdvancedMobileMenuV9") then
+    CoreGui.AdvancedMobileMenuV9:Destroy()
 end
 
 -- Cấu hình trạng thái
@@ -15,10 +15,11 @@ local isEnabled = false
 local currentMode = 3 -- 1: Danh sách, 2: Textbox, 3: Random, 4: Ít máu nhất
 local targetPlayer = nil
 local isFollowing = false
-local distanceOffset = 4
+local distanceOffset = 4 -- Dùng chung để chỉnh xa/gần hoặc khoảng cách dưới chân
+local followPositionMode = "Behind" -- "Behind" hoặc "Feet"
 
--- Chế độ vị trí bám: "Behind" (Sau lưng) hoặc "Feet" (Dưới chân)
-local followPositionMode = "Behind" 
+-- Biến Anti-Void
+local antiVoidEnabled = true
 
 -- Biến Auto M1 và Auto Skills
 local autoM1Enabled = false
@@ -46,7 +47,7 @@ end
 
 -- Tạo ScreenGui
 local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "AdvancedMobileMenuV8"
+screenGui.Name = "AdvancedMobileMenuV9"
 screenGui.Parent = CoreGui
 screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
@@ -93,7 +94,7 @@ mainFrame.Parent = screenGui
 mainFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
 mainFrame.BorderSizePixel = 0
 mainFrame.Position = UDim2.new(0.02, 0, 0.23, 0)
-mainFrame.Size = UDim2.new(0, 230, 0, 440)
+mainFrame.Size = UDim2.new(0, 230, 0, 470)
 mainFrame.Visible = false
 local c2 = Instance.new("UICorner") c2.CornerRadius = UDim.new(0, 8) c2.Parent = mainFrame
 makeDraggable(mainFrame)
@@ -105,7 +106,7 @@ title.Size = UDim2.new(1, 0, 0, 30)
 title.Font = Enum.Font.SourceSansBold
 title.TextColor3 = Color3.fromRGB(255, 255, 255)
 title.TextSize = 13
-title.Text = "☰ TSB MOBILE MENU v8"
+title.Text = "☰ TSB MOBILE MENU v9"
 local c3 = Instance.new("UICorner") c3.CornerRadius = UDim.new(0, 8) c3.Parent = title
 
 -- Nút ON / OFF Tổng (Bám đuổi)
@@ -120,11 +121,34 @@ powerBtn.TextSize = 12
 powerBtn.Text = "Bám đuổi: OFF"
 local cPow = Instance.new("UICorner") cPow.CornerRadius = UDim.new(0, 4) cPow.Parent = powerBtn
 
+-- Nút Chống Void (Anti-Void)
+local antiVoidBtn = Instance.new("TextButton")
+antiVoidBtn.Parent = mainFrame
+antiVoidBtn.BackgroundColor3 = Color3.fromRGB(40, 150, 40)
+antiVoidBtn.Position = UDim2.new(0, 10, 0, 64)
+antiVoidBtn.Size = UDim2.new(1, -20, 0, 24)
+antiVoidBtn.Font = Enum.Font.SourceSansBold
+antiVoidBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+antiVoidBtn.TextSize = 11
+antiVoidBtn.Text = "Anti-Void (Chống chết vực): ON"
+local cAnti = Instance.new("UICorner") cAnti.CornerRadius = UDim.new(0, 4) cAnti.Parent = antiVoidBtn
+
+antiVoidBtn.MouseButton1Click:Connect(function()
+    antiVoidEnabled = not antiVoidEnabled
+    if antiVoidEnabled then
+        antiVoidBtn.Text = "Anti-Void (Chống chết vực): ON"
+        antiVoidBtn.BackgroundColor3 = Color3.fromRGB(40, 150, 40)
+    else
+        antiVoidBtn.Text = "Anti-Void (Chống chết vực): OFF"
+        antiVoidBtn.BackgroundColor3 = Color3.fromRGB(150, 40, 40)
+    end
+end)
+
 -- Nút Chuyển Vị Trí Bám (Sau lưng / Dưới chân)
 local posModeBtn = Instance.new("TextButton")
 posModeBtn.Parent = mainFrame
 posModeBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 120)
-posModeBtn.Position = UDim2.new(0, 10, 0, 65)
+posModeBtn.Position = UDim2.new(0, 10, 0, 92)
 posModeBtn.Size = UDim2.new(1, -20, 0, 25)
 posModeBtn.Font = Enum.Font.SourceSansBold
 posModeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -135,7 +159,7 @@ local cPosMode = Instance.new("UICorner") cPosMode.CornerRadius = UDim.new(0, 4)
 posModeBtn.MouseButton1Click:Connect(function()
     if followPositionMode == "Behind" then
         followPositionMode = "Feet"
-        posModeBtn.Text = "Vị trí bám: Dưới chân (Under Feet)"
+        posModeBtn.Text = "Vị trí bám: Dưới chân (Ngửa mặt đánh)"
         posModeBtn.BackgroundColor3 = Color3.fromRGB(120, 60, 60)
     else
         followPositionMode = "Behind"
@@ -148,7 +172,7 @@ end)
 local modeBtn = Instance.new("TextButton")
 modeBtn.Parent = mainFrame
 modeBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-modeBtn.Position = UDim2.new(0, 10, 0, 94)
+modeBtn.Position = UDim2.new(0, 10, 0, 121)
 modeBtn.Size = UDim2.new(1, -20, 0, 25)
 modeBtn.Font = Enum.Font.SourceSansBold
 modeBtn.TextColor3 = Color3.fromRGB(255, 215, 0)
@@ -160,7 +184,7 @@ local cMode = Instance.new("UICorner") cMode.CornerRadius = UDim.new(0, 4) cMode
 local nameBox = Instance.new("TextBox")
 nameBox.Parent = mainFrame
 nameBox.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-nameBox.Position = UDim2.new(0, 10, 0, 122)
+nameBox.Position = UDim2.new(0, 10, 0, 149)
 nameBox.Size = UDim2.new(1, -20, 0, 23)
 nameBox.Font = Enum.Font.SourceSans
 nameBox.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -173,7 +197,7 @@ local cBox = Instance.new("UICorner") cBox.CornerRadius = UDim.new(0, 4) cBox.Pa
 local blackBox = Instance.new("TextBox")
 blackBox.Parent = mainFrame
 blackBox.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-blackBox.Position = UDim2.new(0, 10, 0, 149)
+blackBox.Position = UDim2.new(0, 10, 0, 176)
 blackBox.Size = UDim2.new(1, -20, 0, 23)
 blackBox.Font = Enum.Font.SourceSans
 blackBox.TextColor3 = Color3.fromRGB(255, 100, 100)
@@ -185,18 +209,18 @@ local cBlack = Instance.new("UICorner") cBlack.CornerRadius = UDim.new(0, 4) cBl
 -- Điều chỉnh khoảng cách
 local distLabel = Instance.new("TextLabel")
 distLabel.Parent = mainFrame
-distLabel.Position = UDim2.new(0, 10, 0, 175)
+distLabel.Position = UDim2.new(0, 10, 0, 202)
 distLabel.Size = UDim2.new(1, -20, 0, 16)
 distLabel.BackgroundTransparency = 1
 distLabel.Font = Enum.Font.SourceSans
 distLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
 distLabel.TextSize = 11
-distLabel.Text = "Khoảng cách sau lưng: 4"
+distLabel.Text = "Khoảng cách (Xa/Gần hoặc Dưới chân): 4"
 
 local minusDist = Instance.new("TextButton")
 minusDist.Parent = mainFrame
 minusDist.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
-minusDist.Position = UDim2.new(0, 10, 0, 193)
+minusDist.Position = UDim2.new(0, 10, 0, 220)
 minusDist.Size = UDim2.new(0.48, 0, 0, 22)
 minusDist.Text = "- Giảm"
 minusDist.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -206,7 +230,7 @@ local cMin = Instance.new("UICorner") cMin.CornerRadius = UDim.new(0, 4) cMin.Pa
 local plusDist = Instance.new("TextButton")
 plusDist.Parent = mainFrame
 plusDist.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
-plusDist.Position = UDim2.new(0.52, 0, 0, 193)
+plusDist.Position = UDim2.new(0.52, 0, 0, 220)
 plusDist.Size = UDim2.new(0.48, 0, 0, 22)
 plusDist.Text = "+ Tăng"
 plusDist.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -218,8 +242,8 @@ local scrollingFrame = Instance.new("ScrollingFrame")
 scrollingFrame.Parent = mainFrame
 scrollingFrame.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
 scrollingFrame.BorderSizePixel = 0
-scrollingFrame.Position = UDim2.new(0, 10, 0, 218)
-scrollingFrame.Size = UDim2.new(1, -20, 0, 60)
+scrollingFrame.Position = UDim2.new(0, 10, 0, 245)
+scrollingFrame.Size = UDim2.new(1, -20, 0, 50)
 scrollingFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
 scrollingFrame.ScrollBarThickness = 3
 local uiLayout = Instance.new("UIListLayout") uiLayout.Parent = scrollingFrame uiLayout.Padding = UDim.new(0, 3)
@@ -228,7 +252,7 @@ scrollingFrame.Visible = false
 -- KHUNG AUTO M1 & AUTO SKILLS
 local combatLabel = Instance.new("TextLabel")
 combatLabel.Parent = mainFrame
-combatLabel.Position = UDim2.new(0, 10, 0, 285)
+combatLabel.Position = UDim2.new(0, 10, 0, 305)
 combatLabel.Size = UDim2.new(1, -20, 0, 18)
 combatLabel.BackgroundTransparency = 1
 combatLabel.Font = Enum.Font.SourceSansBold
@@ -236,11 +260,11 @@ combatLabel.TextColor3 = Color3.fromRGB(100, 255, 255)
 combatLabel.TextSize = 12
 combatLabel.Text = "--- AUTO COMBAT (MOBILE M1 & SKILLS) ---"
 
--- Nút Auto M1 (Dành riêng cho Mobile)
+-- Nút Auto M1
 local autoM1Btn = Instance.new("TextButton")
 autoM1Btn.Parent = mainFrame
 autoM1Btn.BackgroundColor3 = Color3.fromRGB(150, 40, 40)
-autoM1Btn.Position = UDim2.new(0, 10, 0, 306)
+autoM1Btn.Position = UDim2.new(0, 10, 0, 326)
 autoM1Btn.Size = UDim2.new(1, -20, 0, 24)
 autoM1Btn.Font = Enum.Font.SourceSansBold
 autoM1Btn.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -264,8 +288,8 @@ local skillFrame = Instance.new("ScrollingFrame")
 skillFrame.Parent = mainFrame
 skillFrame.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
 skillFrame.BorderSizePixel = 0
-skillFrame.Position = UDim2.new(0, 10, 0, 334)
-skillFrame.Size = UDim2.new(1, -20, 0, 95)
+skillFrame.Position = UDim2.new(0, 10, 0, 354)
+skillFrame.Size = UDim2.new(1, -20, 0, 105)
 skillFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
 skillFrame.ScrollBarThickness = 3
 local skillLayout = Instance.new("UIListLayout") skillLayout.Parent = skillFrame skillLayout.Padding = UDim.new(0, 3)
@@ -311,11 +335,11 @@ end)
 
 minusDist.MouseButton1Click:Connect(function()
     distanceOffset = math.clamp(distanceOffset - 1, 1, 15)
-    distLabel.Text = "Khoảng cách sau lưng: " .. distanceOffset
+    distLabel.Text = "Khoảng cách (Xa/Gần hoặc Dưới chân): " .. distanceOffset
 end)
 plusDist.MouseButton1Click:Connect(function()
     distanceOffset = math.clamp(distanceOffset + 1, 1, 15)
-    distLabel.Text = "Khoảng cách sau lưng: " .. distanceOffset
+    distLabel.Text = "Khoảng cách (Xa/Gần hoặc Dưới chân): " .. distanceOffset
 end)
 
 modeBtn.MouseButton1Click:Connect(function()
@@ -382,8 +406,19 @@ local function getLowestHealthPlayer()
     return lowestP
 end
 
--- Vòng lặp bám dính liên tục (Hỗ trợ tắt va chạm khi đứng dưới chân)
+-- Vòng lặp chính: Bám dính, Anti-Void và Ngửa mặt đánh dưới chân
 RunService.RenderStepped:Connect(function()
+    -- 1. Xử lý Anti-Void (Nếu tọa độ Y xuống dưới -100, đưa nhân vật về lại độ cao an toàn)
+    if antiVoidEnabled then
+        local char = player.Character
+        if char and char:FindFirstChild("HumanoidRootPart") then
+            if char.HumanoidRootPart.Position.Y < -50 then
+                char.HumanoidRootPart.CFrame = CFrame.new(0, 50, 0)
+                char.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
+            end
+        end
+    end
+
     if not isEnabled or not isFollowing then return end
     
     local isTargetDead = false
@@ -420,13 +455,15 @@ RunService.RenderStepped:Connect(function()
             -- Bám sau lưng và hướng mặt về phía họ
             local offset = targetHRP.CFrame * CFrame.new(0, 0, distanceOffset)
             hrp.CFrame = CFrame.new(offset.Position, targetHRP.Position)
-            -- Bật lại va chạm thông thường khi ở sau lưng
             for _, part in ipairs(char:GetDescendants()) do
                 if part:IsA("BasePart") then part.CanCollide = true end
             end
         else
-            -- Bám dưới chân (Ngay bên dưới người họ) và TẮT VA CHẠM (No-Collision)
-            hrp.CFrame = targetHRP.CFrame - Vector3.new(0, 3.5, 0)
+            -- Bám dưới chân (Dùng distanceOffset để chỉnh khoảng cách độ cao dưới chân) + NGỬA MẶT LÊN TRỜI (Look Up)
+            local pos = targetHRP.Position - Vector3.new(0, distanceOffset, 0)
+            -- CFrame.lookAt với Vector3.new(0, 1, 0) hướng góc nhìn thẳng lên trời để chém trúng chân địch
+            hrp.CFrame = CFrame.lookAt(pos, pos + Vector3.new(0, 1, 0))
+            
             for _, part in ipairs(char:GetDescendants()) do
                 if part:IsA("BasePart") then part.CanCollide = false end
             end
@@ -440,7 +477,6 @@ task.spawn(function()
     while true do
         task.wait(0.2)
         if autoM1Enabled then
-            -- Lệnh giả lập tấn công chuẩn cho Mobile (VirtualUser click button đánh)
             VirtualUser:Button1Down(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
             task.wait(0.05)
             VirtualUser:Button1Up(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
@@ -489,4 +525,4 @@ toggleBtn.MouseButton1Click:Connect(function()
     if mainFrame.Visible and currentMode == 1 then updateList() end
 end)
 
-print("Advanced Mobile Menu v8 Loaded Successfully!")
+print("Advanced Mobile Menu v9 Loaded Successfully!")
